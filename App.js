@@ -31,11 +31,12 @@ export default class App extends Component {
     this.gravarTarefa = this.gravarTarefa.bind(this);
   }
 
-  async componentDidMount(){
-    
-    await AsyncStorage.getItem("lista").then((value)=>{
+  
+
+  async componentDidMount() {
+    await AsyncStorage.getItem("lista").then((value) => {
       let listaRecuperada = JSON.parse(value);
-      this.setState({lista:listaRecuperada});
+      this.setState({ lista: listaRecuperada });
     });
   }
 
@@ -45,23 +46,29 @@ export default class App extends Component {
   }
 
   gravarTarefa() {
-    let lista = this.state.lista;
-    let indice = lista.length;
+    if (this.state.input !== '') {
+      let lista = this.state.lista;
+      let indice = lista.length;
 
-    lista.push({
-      id: indice + 1,
-      nome: this.state.input
-    });
+      lista.push({
+        id: indice + 1,
+        nome: this.state.input
+      });
 
-    this.setState({ input: '' })
-    Keyboard.dismiss();
+      this.setState({ input: '' })
+      Keyboard.dismiss();
+    } else {
+      Alert.alert("Seu orelha...", "Preecha uma tarefa antes de adicionar!");
+    }
 
   }
 
   render() {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Pra Fazer, Zeh!</Text>
+        <View style={styles.headerTitle}>
+          <Text style={styles.title}>Pra Fazer, Zeh!</Text>
+        </View>
         <View style={styles.header}>
           <TextInput
             value={this.state.input}
@@ -79,7 +86,7 @@ export default class App extends Component {
           <FlatList
             key={this.state.lista.id}
             data={this.state.lista}
-            renderItem={({ item }) => <Lista data={item} />}
+            renderItem={({ item }) => <Lista data={item} lista={this.state.lista} />}
           />
         </View>
       </SafeAreaView>
@@ -98,21 +105,24 @@ class Lista extends Component {
               "A tarefa foi realizada?",
               [
                 {
-                  text: "Sim",
+                  text: "Lógico!",
                   onPress: () => {
-                    let elemento = this.props.data;
-                    alert(this.props.data.indexOf(elemento));
+                    let listaAtualizada = this.props.lista;
+                    let index = this.props.data.id-1;
+                    listaAtualizada.splice(index, 1);
+                    this.setState({lista:listaAtualizada})
+                    //alert(lista.length);
                   },
                 },
                 {
-                  text: "Não",
+                  text: "Não, perae...",
                   onPress: () => { },
                 },
               ]
             );
           }}
         >
-          <Text style={styles.tarefa}>{this.props.data.nome}</Text>
+          <Text style={styles.tarefa}>{this.props.data.id}-{this.props.data.nome}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -124,24 +134,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerTitle: {
+    backgroundColor: '#ff9900'
+  },
   title: {
     marginVertical: 20,
     textAlign: 'center',
     fontSize: 30,
     fontWeight: 'bold',
-    color: "#ff9900"
+    color: "#fff"
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignContent: 'center',
     width: larguraTela,
-    marginLeft: 20,
-    marginRight: 20
+    margin: 20
   },
   textInput: {
-    borderBottomColor: '#ff9900',
-    borderBottomWidth: 1,
+    borderColor: '#ff9900',
+    borderWidth: 1,
+    borderRadius: 10,
     width: larguraTela / 1.5
   },
   button: {
@@ -161,11 +174,12 @@ const styles = StyleSheet.create({
     marginVertical: 10
   },
   listItem: {
-    marginVertical: 10,
+    marginVertical: 2,
     marginHorizontal: 15,
-    borderBottomColor: "#ddd",
-    paddingVertical: 10,
-    borderBottomWidth: 1
+    borderColor: "#ddd",
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5
   },
   tarefa: {
     fontSize: 20,
