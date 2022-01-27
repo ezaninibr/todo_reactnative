@@ -24,6 +24,7 @@ export default class App extends Component {
     super(props);
     this.state = {
       input: '',
+      contador: 0,
       lista: [
 
       ]
@@ -31,29 +32,36 @@ export default class App extends Component {
     this.gravarTarefa = this.gravarTarefa.bind(this);
   }
 
-  
-
   async componentDidMount() {
     await AsyncStorage.getItem("lista").then((value) => {
       let listaRecuperada = JSON.parse(value);
       this.setState({ lista: listaRecuperada });
+    });
+    await AsyncStorage.getItem("contador").then((value) => {
+      this.setState({ contador: Number(value) })
     });
   }
 
   async componentDidUpdate() {
     let listaGravar = JSON.stringify(this.state.lista)
     await AsyncStorage.setItem("lista", listaGravar);
+    await AsyncStorage.setItem("contador", String(this.state.contador));
+    
   }
 
   gravarTarefa() {
     if (this.state.input !== '') {
       let lista = this.state.lista;
-      let indice = lista.length;
+      let indice = this.state.contador;
 
       lista.push({
-        id: indice + 1,
+        id: indice,
         nome: this.state.input
       });
+
+      indice++;
+
+      this.setState({ contador: indice });
 
       this.setState({ input: '' })
       Keyboard.dismiss();
@@ -84,9 +92,10 @@ export default class App extends Component {
         </View>
         <View style={styles.list}>
           <FlatList
-            key={this.state.lista.id}
+            keyExtractor={(item) => item.id}
             data={this.state.lista}
             renderItem={({ item }) => <Lista data={item} lista={this.state.lista} />}
+            extraData={this.state}
           />
         </View>
       </SafeAreaView>
@@ -108,10 +117,9 @@ class Lista extends Component {
                   text: "Lógico!",
                   onPress: () => {
                     let listaAtualizada = this.props.lista;
-                    let index = this.props.data.id-1;
+                    let index = listaAtualizada.indexOf(this.props.data);
                     listaAtualizada.splice(index, 1);
-                    this.setState({lista:listaAtualizada})
-                    //alert(lista.length);
+                    this.setState({ lista: listaAtualizada })
                   },
                 },
                 {
@@ -122,7 +130,7 @@ class Lista extends Component {
             );
           }}
         >
-          <Text style={styles.tarefa}>{this.props.data.id}-{this.props.data.nome}</Text>
+          <Text style={styles.tarefa}>{this.props.data.nome}</Text>
         </TouchableOpacity>
       </View>
     );
